@@ -123,6 +123,17 @@ export async function generateProjectDocs(data: any) {
 
         const projectType = data.brief.projectType || "website";
 
+        // SpecForge Logic: Define specific architectural rules based on project type
+        const isAppType = ["saas", "dashboard", "ai", "mobile", "social", "marketplace", "backend", "webapp"].includes(projectType);
+
+        const layoutStrategy = isAppType
+            ? "MANDATORY ARCHITECTURE: heavily prioritize a 'Product/App UI'. Use persistent Sidebar Navigation + Header + Main Content Area. Use 'lucide-react' for dense iconography. Do NOT use a long-form landing page scroll layout for the core app views."
+            : "MANDATORY ARCHITECTURE: heavily prioritize a 'Marketing/Content UI'. Use large typography, Hero sections, and scroll-triggered animations (Framer Motion).";
+
+        const taskStrategy = isAppType
+            ? "EXECUTION ORDER: 1. Core Infrastructure (Auth, Database Schema, API) -> 2. Domain Logic & State -> 3. App Shell UI -> 4. Polish. Do NOT start with the Landing Page, start with the App."
+            : "EXECUTION ORDER: 1. Design System & Typography -> 2. Hero & Key Sections -> 3. Interactive Elements -> 4. SEO & Performance.";
+
         const [briefResult, styleResult, requirementsResult, tasksResult, moodboardResult] = await Promise.all([
             model.generateContent(`
                 Role: Chief Product Officer.
@@ -143,14 +154,14 @@ export async function generateProjectDocs(data: any) {
                 Task: Write a detailed PROJECT_REQUIREMENTS.md for a ${projectType}.
                 Data: ${JSON.stringify(data)}
                 Output: Full Markdown file content starting with # Project Requirements.
-                Requirements: List Functional/Non-Functional requirements, data schemas, and constraints for a ${projectType}.
+                Requirements: List Functional/Non-Functional requirements, data schemas, and constraints for a ${projectType}. ${layoutStrategy}
             `),
             model.generateContent(`
                 Role: Technical Project Manager.
                 Task: Write a detailed implementation plan (tasks.md) for a ${projectType}.
                 Data: ${JSON.stringify(data.brief.sections)}
                 Output: Full Markdown file content starting with # Implementation Tasks.
-                Requirements: phased phases (Setup, Core, Polish) and specific library suggestions.
+                Requirements: phased phases (Setup, Core, Polish) and specific library suggestions. ${taskStrategy}
             `),
             model.generateContent(`
                 Role: Creative Director.
