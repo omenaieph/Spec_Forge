@@ -13,11 +13,12 @@ export type SectionSpec = {
 export type WizardData = {
     brief: {
         description: string;
+        projectType: "marketing" | "saas" | "ecommerce" | "marketplace" | "social" | "dashboard" | "mobile" | "content" | "backend" | "ai" | "other";
         audience: string;
         goal: string;
         sections: string[];
         sectionContext: Record<string, string>;
-    };
+    },
     vibe: {
         keywords: string[];
         theme: "dark" | "light";
@@ -57,6 +58,7 @@ interface WizardContextType {
 const defaultData: WizardData = {
     brief: {
         description: "",
+        projectType: "marketing",
         audience: "",
         goal: "Download",
         sections: ["Hero", "Features", "Footer"],

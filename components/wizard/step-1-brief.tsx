@@ -10,8 +10,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { AISuggestions } from "@/lib/ai-suggestions";
-import { Sparkles, ArrowRight, X, ListTree, MessageSquarePlus, Terminal } from "lucide-react";
+import { Sparkles, ArrowRight, X, ListTree, MessageSquarePlus, Terminal, Globe, Layout, AppWindow, Smartphone, ShoppingBag, Server, Store, Users, Bot, Feather, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const PROJECT_TYPES = [
+    { id: "marketing", label: "Marketing Website", icon: Globe, desc: "Landing Pages, Portfolios", defaultSections: ["Hero", "Features", "Pricing", "Testimonials", "FAQ", "Footer", "About", "Contact"] },
+    { id: "saas", label: "SaaS Application", icon: LayoutDashboard, desc: "Productivity, Tools", defaultSections: ["Onboarding", "Dashboard", "Projects", "Analytics", "Settings", "Billing", "Team"] },
+    { id: "ecommerce", label: "E-Commerce", icon: ShoppingBag, desc: "Online Store, Shopify", defaultSections: ["Hero", "Featured Products", "Collections", "Product Grid", "Cart", "Checkout", "Account"] },
+    { id: "marketplace", label: "Marketplace", icon: Store, desc: "Two-sided, Listings", defaultSections: ["Search Hero", "Categories", "Featured Listings", "Map View", "Vendor Profile", "Booking Flow"] },
+    { id: "social", label: "Social Platform", icon: Users, desc: "Community, Feed", defaultSections: ["Feed", "Create Post", "User Profile", "Comments", "Notifications", "Messaging", "Explore"] },
+    { id: "ai", label: "AI Tool / Wrapper", icon: Bot, desc: "GenAI, LLM Interface", defaultSections: ["Prompt Input", "Chat Interface", "Result Display", "History", "Templates", "Settings"] },
+    { id: "dashboard", label: "Admin Dashboard", icon: AppWindow, desc: "Internal Tools, CRM", defaultSections: ["Overview Stats", "Data Tables", "Filters", "User Management", "Reports", "Logs"] },
+    { id: "mobile", label: "Mobile App", icon: Smartphone, desc: "iOS, Android Native", defaultSections: ["Splash", "Onboarding", "Tab Navigation", "Feed", "Profile", "Settings"] },
+    { id: "content", label: "Content / Blog", icon: Feather, desc: "News, Media, Wiki", defaultSections: ["Featured Article", "Latest Posts", "Categories", "Author Profile", "Article View", "Newsletter"] },
+    { id: "backend", label: "Backend / API", icon: Server, desc: "Infrastructure, CLI", defaultSections: ["API Reference", "Auth Patterns", "Endpoints", "Database Schema", "Architecture", "Errors"] }
+];
 
 const DEFAULT_SECTIONS = ["Hero", "Features", "Pricing", "Testimonials", "FAQ", "Footer", "About", "Contact", "Blog", "Docs"];
 
@@ -26,7 +39,7 @@ export function Step1Brief() {
 
     const handleSuggest = () => {
         if (!data.brief.description) return;
-        const suggestions = AISuggestions.brief.suggestStats(data.brief.description);
+        const suggestions = AISuggestions.brief.suggestStats(data.brief.description, data.brief.projectType);
         updateBrief({
             audience: suggestions.audience,
             sections: suggestions.sections,
@@ -51,7 +64,7 @@ export function Step1Brief() {
     const handleRefineBrief = async () => {
         if (!data.brief.description) return;
         setIsLoadingRefinement(true);
-        const refinement = await AISuggestions.brief.refineBrief(data.brief.description);
+        const refinement = await AISuggestions.brief.refineBrief(data.brief.description, data.brief.projectType);
         setRefinementQuestions(refinement.questions);
         setStrategyTip(refinement.strategyTip);
         updateBrief({ description: refinement.premiumBrief });
@@ -88,6 +101,39 @@ export function Step1Brief() {
                     </div>
                 </CardHeader>
                 <CardContent className="space-y-8">
+                    {/* Project Type Selector */}
+                    <div className="space-y-2">
+                        <Label className="text-zinc-400 text-xs font-bold uppercase">Project Type</Label>
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                            {PROJECT_TYPES.map((type) => {
+                                const Icon = type.icon;
+                                const isSelected = data.brief.projectType === type.id;
+                                return (
+                                    <div
+                                        key={type.id}
+                                        onClick={() => {
+                                            updateBrief({
+                                                projectType: type.id as any,
+                                                sections: type.defaultSections // Auto-switch defaults
+                                            });
+                                        }}
+                                        className={cn(
+                                            "flex flex-col items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition-all gap-2 group h-24 text-center",
+                                            isSelected
+                                                ? "border-indigo-500 bg-indigo-500/10"
+                                                : "border-white/5 bg-zinc-950/30 hover:border-zinc-700 hover:bg-zinc-950/50"
+                                        )}
+                                    >
+                                        <Icon className={cn("w-5 h-5", isSelected ? "text-indigo-400" : "text-zinc-500 group-hover:text-zinc-300")} />
+                                        <div className="space-y-0.5">
+                                            <p className={cn("text-[10px] font-bold uppercase tracking-tight", isSelected ? "text-white" : "text-zinc-400")}>{type.label}</p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
                     {/* Description Area */}
                     <div className="space-y-4">
                         <div className="space-y-2">
@@ -154,7 +200,7 @@ export function Step1Brief() {
                         <div className="space-y-2">
                             <Label className="text-zinc-400 text-xs font-bold uppercase">Dynamic Section Checklist</Label>
                             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                                {DEFAULT_SECTIONS.map((section) => (
+                                {(PROJECT_TYPES.find(t => t.id === data.brief.projectType)?.defaultSections || DEFAULT_SECTIONS).map((section) => (
                                     <div
                                         key={section}
                                         onClick={() => {

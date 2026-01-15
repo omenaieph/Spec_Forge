@@ -17,7 +17,7 @@ export function Step2Vibe() {
 
     const handleSuggest = async () => {
         if (!data.brief.description) return;
-        const suggestions = await AISuggestions.vibe.suggestStyle(data.brief.description);
+        const suggestions = await AISuggestions.vibe.suggestStyle(data.brief.description, data.brief.projectType);
         updateVibe({
             keywords: suggestions.keywords,
             accent: suggestions.accent,

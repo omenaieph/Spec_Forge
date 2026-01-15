@@ -11,13 +11,14 @@ if (!API_KEY && process.env.NODE_ENV === 'development') {
 const genAI = new GoogleGenerativeAI(API_KEY || "");
 const GENERATION_MODEL = "gemini-2.0-flash-exp";
 
-export async function refineBriefAI(description: string) {
+export async function refineBriefAI(description: string, projectType: string = "website") {
     try {
         const model = genAI.getGenerativeModel({ model: GENERATION_MODEL });
         const prompt = `
             Role: You are a world-class Product Strategist (ex-McKinsey/IDEO).
             Task: Analyze the user's initial project description and refine it into a high-fidelity Product Brief.
             
+            Project Type: ${projectType}
             Description: "${description}"
             
             Protocol:
@@ -53,6 +54,7 @@ export async function suggestBlueprintAI(section: string, context: any) {
             Section: ${section}
             Specific Section Context: ${context.brief.sectionContext?.[section] || "None provided"}
             
+            Project Type: ${context.brief.projectType || "website"}
             Overall Project Brief: ${JSON.stringify(context.brief.description)}
             Target Audience: ${JSON.stringify(context.brief.audience)}
             Visual Context: ${JSON.stringify(context.vibe)}
@@ -82,6 +84,7 @@ export async function suggestStyleAI(description: string) {
             Role: UI/UX Aesthetic Architect (Awwwards Jury Member level).
             Task: Suggest a high-end design system based on a project brief.
             
+            Project Type: ${description.includes(" | Type: ") ? description.split(" | Type: ")[1] : "website"}
             Description: "${description}"
             
             Protocol:
@@ -118,13 +121,15 @@ export async function generateProjectDocs(data: any) {
     try {
         const model = genAI.getGenerativeModel({ model: GENERATION_MODEL });
 
+        const projectType = data.brief.projectType || "website";
+
         const [briefResult, styleResult, requirementsResult, tasksResult, moodboardResult] = await Promise.all([
             model.generateContent(`
                 Role: Chief Product Officer.
-                Task: Write a comprehensive Product Brief for specific project data.
+                Task: Write a comprehensive Product Brief for a ${projectType}.
                 Data: ${JSON.stringify(data.brief)}
                 Output: Full Markdown file content starting with # Product Brief.
-                Requirements: analyze personas, success metrics, and future roadmap ideas.
+                Requirements: analyze personas, success metrics, and future roadmap ideas specific to a ${projectType}.
             `),
             model.generateContent(`
                 Role: Design Systems Lead.
@@ -135,14 +140,14 @@ export async function generateProjectDocs(data: any) {
             `),
             model.generateContent(`
                 Role: Senior Engineering Manager.
-                Task: Write a detailed PROJECT_REQUIREMENTS.md.
+                Task: Write a detailed PROJECT_REQUIREMENTS.md for a ${projectType}.
                 Data: ${JSON.stringify(data)}
                 Output: Full Markdown file content starting with # Project Requirements.
-                Requirements: List Functional/Non-Functional requirements, data schemas, and constraints.
+                Requirements: List Functional/Non-Functional requirements, data schemas, and constraints for a ${projectType}.
             `),
             model.generateContent(`
                 Role: Technical Project Manager.
-                Task: Write a detailed implementation plan (tasks.md).
+                Task: Write a detailed implementation plan (tasks.md) for a ${projectType}.
                 Data: ${JSON.stringify(data.brief.sections)}
                 Output: Full Markdown file content starting with # Implementation Tasks.
                 Requirements: phased phases (Setup, Core, Polish) and specific library suggestions.
@@ -180,6 +185,7 @@ export async function generateSectionDetails(section: string, data: any) {
             Task: Create a deep technical blueprint for the "${section}" section.
             
             Context:
+            - Project Type: ${data.brief.projectType || "website"}
             - Goal: ${data.brief.goal}
             - Style: ${JSON.stringify(data.vibe)}
             - Section Requirements: ${context}
